@@ -45,4 +45,27 @@ export class AccountRepository extends BaseRepository<Account> {
       throw error;
     }
   }
+
+  async findByAccountNumber(accountNumber: string): Promise<Account | null> {
+    try {
+      const fetchXml = `
+        <fetch version="1.0">
+          <entity name="account">
+            <attribute name="accountid" />
+            <attribute name="name" />
+            <attribute name="accountnumber" />
+            <attribute name="createdon" />
+            <filter type="and">
+              <condition attribute="accountnumber" operator="eq" value="${accountNumber.replace(/'/g, "&apos;")}" />
+            </filter>
+          </entity>
+        </fetch>`;
+
+      const result = await this.fetchXml(fetchXml);
+      return result.entities.length > 0 ? result.entities[0] : null;
+    } catch (error) {
+      console.error('Error finding account by account number:', error);
+      throw error;
+    }
+  }
 }

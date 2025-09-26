@@ -68,4 +68,66 @@ export class TeamRepository extends BaseRepository<Team> {
       return false;
     }
   }
+
+  async getTeamsForUser(userId: string): Promise<Team[]> {
+    try {
+      const cleanUserId = this.cleanEntityId(userId);
+      const fetchXml = `
+        <fetch version="1.0">
+          <entity name="team">
+            <attribute name="teamid" />
+            <attribute name="name" />
+            <attribute name="createdon" />
+            <link-entity name="teammembership" from="teamid" to="teamid" intersect="true">
+              <link-entity name="systemuser" from="systemuserid" to="systemuserid">
+                <filter type="and">
+                  <condition attribute="systemuserid" operator="eq" value="${cleanUserId}" />
+                </filter>
+              </link-entity>
+            </link-entity>
+          </entity>
+        </fetch>`;
+      
+      const result = await this.fetchXml(fetchXml);
+      return result.entities;
+    } catch (error) {
+      console.error('Error getting teams for user:', error);
+      throw error;
+    }
+  }
+
+  async isUserMemberOfAnyTeam(teamNames: string[], userId: string): Promise<boolean> {
+    try {
+      if (teamNames.length === 0) return false;
+
+      const cleanUserId = this.cleanEntityId(userId);
+      const teamConditions = teamNames
+        .map(name => `<condition attribute="name" operator="eq" value="${name.replace(/'/g, "&apos;")}" />`)
+        .join('');
+
+      const fetchXml = `
+        <fetch version="1.0">
+          <entity name="team">
+            <attribute name="teamid" />
+            <attribute name="name" />
+            <filter type="or">
+              ${teamConditions}
+            </filter>
+            <link-entity name="teammembership" from="teamid" to="teamid" intersect="true">
+              <link-entity name="systemuser" from="systemuserid" to="systemuserid">
+                <filter type="and">
+                  <condition attribute="systemuserid" operator="eq" value="${cleanUserId}" />
+                </filter>
+              </link-entity>
+            </link-entity>
+          </entity>
+        </fetch>`;
+      
+      const result = await this.fetchXml(fetchXml);
+      return result.entities.length > 0;
+    } catch (error) {
+      console.error('Error checking membership in any team:', error);
+      return false;
+    }
+  }
 }
