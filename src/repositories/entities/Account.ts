@@ -7,7 +7,8 @@ export class Account implements IEntity {
 
   name: string;
   accountnumber?: string;
-
+  telephone1?: string;
+  fax?: string;
   constructor(id: string, name: string) {
     this.id = id;
     this.name = name;

@@ -10,6 +10,8 @@ export class AccountRepository extends BaseRepository<Account> {
     const account = new Account(entity.accountid, entity.name);
     account.createdon = this.parseDate(entity.createdon);
     account.accountnumber = entity.accountnumber;
+    account.telephone1 = entity.telephone1;
+    account.fax = entity.fax;
     return account;
   }
 

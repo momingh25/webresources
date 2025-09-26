@@ -1,11 +1,10 @@
 // Using @types/xrm - no imports needed, Xrm is globally available
-import { AccountAttributes } from "../constants/EntityAttributes";
 import { TeamHelpers } from "../helpers/TeamHelpers";
 import { accountRepository, teamRepository } from "../repositories";
 
 export class AccountForm {
   static async onLoad(context: Xrm.Events.EventContext): Promise<void> {
-    context.getFormContext().getAttribute(AccountAttributes.WebSiteURL).addOnChange(AccountForm.onWebsiteChanged);
+    context.getFormContext().getAttribute("websiteurl").addOnChange(AccountForm.onWebsiteChanged);
     
     // Check team membership and set name field readonly if needed
     await AccountForm.checkNameFieldAccess(context);
@@ -28,12 +27,8 @@ export class AccountForm {
       const isClientServicesMember = await teamRepository.isUserMemberOfTeam('Client Services', currentUserId);
       
       if (!isClientServicesMember) {
-        const nameAttribute = formContext.getAttribute(AccountAttributes.Name);
-        if (nameAttribute) {
-          nameAttribute.controls.forEach((control) => {
-            control.setDisabled(true);
-          });
-        }
+        const nameControl = formContext.getControl<Xrm.Controls.StringControl>("name");
+        nameControl.setDisabled(true);
       }
     } catch (error) {
       console.error('Error checking team membership for name field access:', error);
@@ -51,29 +46,13 @@ export class AccountForm {
       
       if (accountId) {
         // Use repository to get strongly-typed account entity
-        const account = await accountRepository.retrieveById(accountId, ['name', 'accountnumber']);
+        const account = await accountRepository.retrieveById(accountId, ['name', 'accountnumber', 'telephone1', 'fax']);
         
-        if (account) {
-          console.log(`Loaded account: ${account.name} (ID: ${account.id})`);
-          
-          // Check for duplicate account numbers if account number exists
-          if (account.accountnumber) {
-            const duplicateAccount = await accountRepository.findByAccountNumber(account.accountnumber);
-            if (duplicateAccount && duplicateAccount.id !== account.id) {
-              console.warn(`Potential duplicate found: Account ${duplicateAccount.name} has the same account number`);
-            }
-          }
-          
-          // Example: Find related accounts with similar names
-          if (account.name.length > 3) {
-            const similarAccounts = await accountRepository.findByName(account.name.substring(0, 3), false);
-            const relatedAccounts = similarAccounts.filter(a => a.id !== account.id);
-            
-            if (relatedAccounts.length > 0) {
-              console.log(`Found ${relatedAccounts.length} related accounts with similar names`);
-            }
-          }
-        }
+        console.log('Account Data:', account);
+        console.log('Account Name:', account?.name);
+        console.log('Account Number:', account?.accountnumber);
+        console.log('Account Telephone:', account?.telephone1);
+        console.log('Account Fax:', account?.fax);
       }
     } catch (error) {
       console.error('Error validating account data:', error);
@@ -82,7 +61,7 @@ export class AccountForm {
 
   static onWebsiteChanged(context: Xrm.Events.EventContext): void {
     const formContext = context.getFormContext();
-    const websiteAttribute = formContext.getAttribute(AccountAttributes.WebSiteURL) as Xrm.Attributes.StringAttribute;
+    const websiteAttribute = formContext.getAttribute("websiteurl") as Xrm.Attributes.StringAttribute;
     const websiteRegex = /^(https?:\/\/)?([\w\d]+\.)?[\w\d]+\.\w+\/?.+$/g;
 
     let isValid = true;
@@ -93,11 +72,11 @@ export class AccountForm {
 
     websiteAttribute.controls.forEach((c) => {
       if (isValid) {
-        (c as Xrm.Controls.StringControl).clearNotification(AccountAttributes.WebSiteURL);
+        (c as Xrm.Controls.StringControl).clearNotification("websiteurl");
       } else {
         (c as Xrm.Controls.StringControl).setNotification(
-          "Hi, This is Invalid Website Address!",
-          AccountAttributes.WebSiteURL,
+          "Hi, This is Invalid Website Address! Please enter a valid URL.",
+          "websiteurl",
         );
       }
     });
