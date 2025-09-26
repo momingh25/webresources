@@ -1,6 +1,5 @@
 import { BaseRepository } from './BaseRepository';
 import { Account } from './entities/Account';
-import { IQueryOptions } from './interfaces/IEntity';
 
 export class AccountRepository extends BaseRepository<Account> {
   constructor() {
@@ -23,27 +22,26 @@ export class AccountRepository extends BaseRepository<Account> {
 
   async findByName(name: string, exactMatch: boolean = false): Promise<Account[]> {
     try {
-      const filterOperator = exactMatch ? 'eq' : 'contains';
-      const escapedName = name.replace(/'/g, "''");
-      const query = `$filter=${filterOperator}(name,'${escapedName}')`;
+      const operator = exactMatch ? 'eq' : 'like';
+      const value = exactMatch ? name.replace(/'/g, "&apos;") : `%${name.replace(/'/g, "&apos;")}%`;
+      
+      const fetchXml = `
+        <fetch version="1.0">
+          <entity name="account">
+            <attribute name="accountid" />
+            <attribute name="name" />
+            <attribute name="accountnumber" />
+            <attribute name="createdon" />
+            <filter type="and">
+              <condition attribute="name" operator="${operator}" value="${value}" />
+            </filter>
+          </entity>
+        </fetch>`;
 
-      const result = await this.retrieveMultiple(query);
+      const result = await this.fetchXml(fetchXml);
       return result.entities;
     } catch (error) {
       console.error('Error finding accounts by name:', error);
-      throw error;
-    }
-  }
-
-  async findByAccountNumber(accountNumber: string): Promise<Account | null> {
-    try {
-      const escapedAccountNumber = accountNumber.replace(/'/g, "''");
-      const query = `$filter=accountnumber eq '${escapedAccountNumber}'`;
-
-      const result = await this.retrieveMultiple(query);
-      return result.entities.length > 0 ? result.entities[0] : null;
-    } catch (error) {
-      console.error('Error finding account by account number:', error);
       throw error;
     }
   }

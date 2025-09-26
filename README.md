@@ -4,7 +4,12 @@ This document provides examples and best practices for using the simplified repo
 
 ## Overview
 
-The repository pattern provides a consistent, strongly-typed interface for accessing Dataverse entities with minimal overhead.
+The repository pattern provides a consistent, strongly-typed interface for accessing Dataverse entities with minimal overhead. 
+
+**Core Interfaces:**
+- `IEntity`: Basic entity with id, entityLogicalName, createdon
+- `IFetchXmlResult<T>`: Simple result wrapper containing only entities array
+- `IRepository<T>`: Repository contract with fetchXml and retrieveById methods only
 
 ## Quick Start
 

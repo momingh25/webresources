@@ -29,10 +29,7 @@ export abstract class BaseRepository<T extends IEntity> implements IRepository<T
       const entities = response.entities.map(entity => this.mapFromDataverse(entity));
 
       return {
-        entities,
-        totalRecordCount: response['@Microsoft.Dynamics.CRM.totalrecordcount'],
-        moreRecords: response['@Microsoft.Dynamics.CRM.morerecords'] || false,
-        pagingCookie: response['@Microsoft.Dynamics.CRM.pagingcookie']
+        entities
       };
     } catch (error) {
       console.error(`Error executing FetchXML for ${this.entityLogicalName}:`, error);
@@ -62,108 +59,6 @@ export abstract class BaseRepository<T extends IEntity> implements IRepository<T
     }
   }
 
-  /**
-   * Retrieve multiple entities with OData query
-   * @param query - OData query string (without leading ?)
-   * @param options - Query options
-   * @returns Promise with typed entities
-   */
-  async retrieveMultiple(query?: string, options?: IQueryOptions): Promise<IFetchXmlResult<T>> {
-    try {
-      let finalQuery = '';
-      const queryParams: string[] = [];
-
-      if (query) {
-        queryParams.push(query);
-      }
-
-      if (options?.top) {
-        queryParams.push(`$top=${options.top}`);
-      }
-
-      if (options?.skip) {
-        queryParams.push(`$skip=${options.skip}`);
-      }
-
-      if (options?.includeCount) {
-        queryParams.push('$count=true');
-      }
-
-      if (options?.additionalOptions) {
-        queryParams.push(...options.additionalOptions);
-      }
-
-      if (queryParams.length > 0) {
-        finalQuery = `?${queryParams.join('&')}`;
-      }
-
-      const response = await Xrm.WebApi.retrieveMultipleRecords(this.entityLogicalName, finalQuery);
-      
-      const entities = response.entities.map(entity => this.mapFromDataverse(entity));
-
-      return {
-        entities,
-        totalRecordCount: response['@odata.count'],
-        moreRecords: !!response['@odata.nextLink'],
-        pagingCookie: response['@odata.nextLink']
-      };
-    } catch (error) {
-      console.error(`Error retrieving multiple ${this.entityLogicalName} records:`, error);
-      throw new Error(`Failed to retrieve entities: ${error}`);
-    }
-  }
-
-  /**
-   * Create a new entity record
-   * @param entity - Partial entity object with properties to create
-   * @returns Promise with the ID of the created record
-   */
-  async create(entity: Partial<T>): Promise<string> {
-    try {
-      const dataverseEntity = this.mapToDataverse(entity);
-      const createdEntity = await Xrm.WebApi.createRecord(this.entityLogicalName, dataverseEntity);
-      return createdEntity.id;
-    } catch (error) {
-      console.error(`Error creating ${this.entityLogicalName} record:`, error);
-      throw new Error(`Failed to create entity: ${error}`);
-    }
-  }
-
-  /**
-   * Update an existing entity record
-   * @param id - Entity ID (with or without curly braces)
-   * @param entity - Partial entity object with properties to update
-   */
-  async update(id: string, entity: Partial<T>): Promise<void> {
-    try {
-      const cleanId = this.cleanEntityId(id);
-      const dataverseEntity = this.mapToDataverse(entity);
-      await Xrm.WebApi.updateRecord(this.entityLogicalName, cleanId, dataverseEntity);
-    } catch (error) {
-      console.error(`Error updating ${this.entityLogicalName} record:`, error);
-      throw new Error(`Failed to update entity: ${error}`);
-    }
-  }
-
-  /**
-   * Delete an entity record
-   * @param id - Entity ID (with or without curly braces)
-   */
-  async delete(id: string): Promise<void> {
-    try {
-      const cleanId = this.cleanEntityId(id);
-      await Xrm.WebApi.deleteRecord(this.entityLogicalName, cleanId);
-    } catch (error) {
-      console.error(`Error deleting ${this.entityLogicalName} record:`, error);
-      throw new Error(`Failed to delete entity: ${error}`);
-    }
-  }
-
-  /**
-   * Clean entity ID by removing curly braces if present
-   * @param id - Entity ID that may contain curly braces
-   * @returns Clean entity ID without curly braces
-   */
   protected cleanEntityId(id: string): string {
     return id.replace(/[{}]/g, '');
   }

@@ -1,6 +1,5 @@
 import { BaseRepository } from './BaseRepository';
 import { Team } from './entities/Team';
-import { IQueryOptions } from './interfaces/IEntity';
 
 export class TeamRepository extends BaseRepository<Team> {
   constructor() {
@@ -21,8 +20,19 @@ export class TeamRepository extends BaseRepository<Team> {
 
   async findByName(teamName: string): Promise<Team | null> {
     try {
-      const query = `$filter=name eq '${teamName.replace(/'/g, "''")}'`;
-      const result = await this.retrieveMultiple(query);
+      const fetchXml = `
+        <fetch version="1.0">
+          <entity name="team">
+            <attribute name="teamid" />
+            <attribute name="name" />
+            <attribute name="createdon" />
+            <filter type="and">
+              <condition attribute="name" operator="eq" value="${teamName.replace(/'/g, "&apos;")}" />
+            </filter>
+          </entity>
+        </fetch>`;
+
+      const result = await this.fetchXml(fetchXml);
       return result.entities.length > 0 ? result.entities[0] : null;
     } catch (error) {
       console.error('Error finding team by name:', error);
@@ -33,56 +43,28 @@ export class TeamRepository extends BaseRepository<Team> {
   async isUserMemberOfTeam(teamName: string, userId: string): Promise<boolean> {
     try {
       const cleanUserId = this.cleanEntityId(userId);
-      const query = `$filter=name eq '${teamName.replace(/'/g, "''")}'&$expand=teammembership_association($filter=systemuserid eq ${cleanUserId})`;
+      const fetchXml = `
+        <fetch version="1.0">
+          <entity name="team">
+            <attribute name="teamid" />
+            <attribute name="name" />
+            <filter type="and">
+              <condition attribute="name" operator="eq" value="${teamName.replace(/'/g, "&apos;")}" />
+            </filter>
+            <link-entity name="teammembership" from="teamid" to="teamid" intersect="true">
+              <link-entity name="systemuser" from="systemuserid" to="systemuserid">
+                <filter type="and">
+                  <condition attribute="systemuserid" operator="eq" value="${cleanUserId}" />
+                </filter>
+              </link-entity>
+            </link-entity>
+          </entity>
+        </fetch>`;
       
-      const result = await this.retrieveMultiple(query);
-      
-      if (result.entities.length === 0) {
-        return false;
-      }
-
-      const team = result.entities[0];
-      return !!(team as any).teammembership_association && (team as any).teammembership_association.length > 0;
+      const result = await this.fetchXml(fetchXml);
+      return result.entities.length > 0;
     } catch (error) {
       console.error('Error checking team membership:', error);
-      return false;
-    }
-  }
-
-  async getTeamsForUser(userId: string): Promise<Team[]> {
-    try {
-      const cleanUserId = this.cleanEntityId(userId);
-      const query = `$expand=teammembership_association($filter=systemuserid eq ${cleanUserId})&$select=teamid,name`;
-      
-      const result = await this.retrieveMultiple(query);
-      
-      return result.entities.filter(team => 
-        (team as any).teammembership_association && (team as any).teammembership_association.length > 0
-      );
-    } catch (error) {
-      console.error('Error getting teams for user:', error);
-      throw error;
-    }
-  }
-
-  async isUserMemberOfAnyTeam(teamNames: string[], userId: string): Promise<boolean> {
-    try {
-      if (teamNames.length === 0) return false;
-
-      const cleanUserId = this.cleanEntityId(userId);
-      const teamNameFilter = teamNames
-        .map(name => `name eq '${name.replace(/'/g, "''")}'`)
-        .join(' or ');
-
-      const query = `$filter=(${teamNameFilter})&$expand=teammembership_association($filter=systemuserid eq ${cleanUserId})`;
-      
-      const result = await this.retrieveMultiple(query);
-      
-      return result.entities.some(team => 
-        (team as any).teammembership_association && (team as any).teammembership_association.length > 0
-      );
-    } catch (error) {
-      console.error('Error checking membership in any team:', error);
       return false;
     }
   }
