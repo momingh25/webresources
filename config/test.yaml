@@ -1,0 +1,5 @@
+nodewebapi:
+ logging: verbose
+ server:
+  host: https://mzhdev.crm4.dynamics.com
+  version: 9.1

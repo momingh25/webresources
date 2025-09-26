@@ -1,0 +1,39 @@
+{
+  "name": "clientjs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "webpack --config webpack.dev.js",
+    "start": "webpack --config webpack.dev.js --watch",
+    "dist": "webpack --config webpack.prod.js",
+    "test": "jest unit",
+    "deploy": "powershell -ExecutionPolicy Bypass -File deploy-enhanced.ps1 -Build",
+    "deploy:solution": "powershell -ExecutionPolicy Bypass -File deploy-enhanced.ps1 -Build -SolutionName",
+    "deploy-auto": "powershell -ExecutionPolicy Bypass -File deploy-enhanced.ps1 -Build -AutoDeploy",
+    "deploy-auto:solution": "powershell -ExecutionPolicy Bypass -File deploy-enhanced.ps1 -Build -AutoDeploy -SolutionName",
+    "deploy-wr": "powershell -ExecutionPolicy Bypass -File deploy-webresource.ps1 -Interactive -Build",
+    "deploy-wr:quick": "powershell -ExecutionPolicy Bypass -File deploy-webresource.ps1 -Build"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/xrm": "^9.0.39",
+    "@typescript-eslint/eslint-plugin": "^8.42.0",
+    "@typescript-eslint/parser": "^8.42.0",
+    "eslint": "^9.35.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-react": "^7.23.2",
+    "jest": "^30.1.3",
+    "prettier": "^3.6.2",
+    "ts-jest": "^29.4.1",
+    "ts-loader": "^9.2.1",
+    "typescript": "^5.9.2",
+    "webpack": "^5.37.1",
+    "webpack-cli": "^6.0.1",
+    "webpack-merge": "^6.0.1",
+    "xrm-mock": "^3.5.1"
+  }
+}
