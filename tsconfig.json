@@ -6,6 +6,8 @@
     "rootDir": "src",
     "moduleResolution": "node",
     "sourceMap": true,  
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   }
 }

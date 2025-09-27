@@ -29,5 +29,9 @@
     "webpack-cli": "^6.0.1",
     "webpack-merge": "^6.0.1",
     "xrm-mock": "^3.5.1"
+  },
+  "dependencies": {
+    "class-transformer": "^0.5.1",
+    "reflect-metadata": "^0.1.14"
   }
 }

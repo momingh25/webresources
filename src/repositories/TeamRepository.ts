@@ -1,5 +1,6 @@
 import { BaseRepository } from './BaseRepository';
 import { Team } from './entities/Team';
+import { EntityMapper } from '../mappings/AutoMapperConfig';
 
 export class TeamRepository extends BaseRepository<Team> {
   constructor() {
@@ -7,14 +8,18 @@ export class TeamRepository extends BaseRepository<Team> {
   }
 
   protected mapFromDataverse(entity: any): Team {
-    const team = new Team(entity.teamid, entity.name);
-    team.createdon = this.parseDate(entity.createdon);
-    return team;
+    // Use EntityMapper with class-transformer for automatic mapping
+    return EntityMapper.mapToTeam(entity);
   }
 
   protected mapToDataverse(entity: Partial<Team>): any {
+    // Use EntityMapper for reverse mapping
+    const mapped = EntityMapper.mapFromTeam(entity as Team);
+    
+    // Filter out undefined values and return only the fields we want to update
     const dataverseEntity: any = {};
-    if (entity.name !== undefined) dataverseEntity.name = entity.name;
+    if (mapped.name !== undefined) dataverseEntity.name = mapped.name;
+    
     return dataverseEntity;
   }
 

@@ -1,5 +1,6 @@
 import { BaseRepository } from './BaseRepository';
 import { Account } from './entities/Account';
+import { EntityMapper } from '../mappings/AutoMapperConfig';
 
 export class AccountRepository extends BaseRepository<Account> {
   constructor() {
@@ -7,18 +8,21 @@ export class AccountRepository extends BaseRepository<Account> {
   }
 
   protected mapFromDataverse(entity: any): Account {
-    const account = new Account(entity.accountid, entity.name);
-    account.createdon = this.parseDate(entity.createdon);
-    account.accountnumber = entity.accountnumber;
-    account.telephone1 = entity.telephone1;
-    account.fax = entity.fax;
-    return account;
+    // Use EntityMapper with class-transformer for automatic mapping
+    return EntityMapper.mapToAccount(entity);
   }
 
   protected mapToDataverse(entity: Partial<Account>): any {
+    // Use EntityMapper for reverse mapping
+    const mapped = EntityMapper.mapFromAccount(entity as Account);
+    
+    // Filter out undefined values and return only the fields we want to update
     const dataverseEntity: any = {};
-    if (entity.name !== undefined) dataverseEntity.name = entity.name;
-    if (entity.accountnumber !== undefined) dataverseEntity.accountnumber = entity.accountnumber;
+    if (mapped.name !== undefined) dataverseEntity.name = mapped.name;
+    if (mapped.accountnumber !== undefined) dataverseEntity.accountnumber = mapped.accountnumber;
+    if (mapped.telephone1 !== undefined) dataverseEntity.telephone1 = mapped.telephone1;
+    if (mapped.fax !== undefined) dataverseEntity.fax = mapped.fax;
+    
     return dataverseEntity;
   }
 
