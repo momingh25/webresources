@@ -1,9 +1,24 @@
 import { plainToClass, instanceToPlain } from 'class-transformer';
 import 'reflect-metadata';
 
-// Import Entity classes
-import { Account } from '../repositories/entities/Account';
-import { Team } from '../repositories/entities/Team';
+/**
+ * Entity configuration for mapping
+ */
+interface EntityConfig {
+  entityLogicalName: string;
+  primaryIdField: string;
+}
+
+/**
+ * Entity configurations registry
+ */
+const ENTITY_CONFIGS: Record<string, EntityConfig> = {
+  Account: { entityLogicalName: 'account', primaryIdField: 'accountid' },
+  Team: { entityLogicalName: 'team', primaryIdField: 'teamid' },
+  // Add more entities here as needed:
+  // Contact: { entityLogicalName: 'contact', primaryIdField: 'contactid' },
+  // Lead: { entityLogicalName: 'lead', primaryIdField: 'leadid' },
+};
 
 /**
  * Mapping utilities using class-transformer
@@ -12,61 +27,48 @@ import { Team } from '../repositories/entities/Team';
 export class EntityMapper {
   
   /**
-   * Maps raw Dataverse data to strongly typed Account entity
+   * Maps raw Dataverse data to strongly typed entity class
+   * @param entityClass - The entity class constructor
+   * @param dataverseData - Raw data from Dataverse
+   * @returns Strongly typed entity class instance
    */
-  static mapToAccount(dataverseData: any): Account {
-    return plainToClass(Account, {
-      ...dataverseData,
-      id: dataverseData.accountid,
-      entityLogicalName: 'account'
-    });
-  }
+  static mapToEntityClass<T>(entityClass: new (...args: any[]) => T, dataverseData: any): T {
+    const entityName = entityClass.name;
+    const config = ENTITY_CONFIGS[entityName];
+    
+    if (!config) {
+      throw new Error(`Entity configuration not found for: ${entityName}. Please add it to ENTITY_CONFIGS.`);
+    }
 
-  /**
-   * Maps Account entity to Dataverse-compatible object
-   */
-  static mapFromAccount(account: Account): any {
-    const plain = instanceToPlain(account);
-    return {
-      accountid: plain.id,
-      name: plain.name,
-      accountnumber: plain.accountnumber,
-      telephone1: plain.telephone1,
-      fax: plain.fax,
-      createdon: plain.createdon
-    };
-  }
-
-  /**
-   * Maps raw Dataverse data to strongly typed Team entity
-   */
-  static mapToTeam(dataverseData: any): Team {
-    return plainToClass(Team, {
-      ...dataverseData,
-      id: dataverseData.teamid,
-      entityLogicalName: 'team'
-    });
-  }
-
-  /**
-   * Maps Team entity to Dataverse-compatible object
-   */
-  static mapFromTeam(team: Team): any {
-    const plain = instanceToPlain(team);
-    return {
-      teamid: plain.id,
-      name: plain.name,
-      createdon: plain.createdon
-    };
-  }
-
-  /**
-   * Generic mapping function for any entity type
-   */
-  static mapToEntity<T>(entityClass: new (...args: any[]) => T, dataverseData: any, idField: string): T {
     return plainToClass(entityClass, {
       ...dataverseData,
-      id: dataverseData[idField]
+      id: dataverseData[config.primaryIdField],
+      entityLogicalName: config.entityLogicalName
     });
+  }
+
+  /**
+   * Maps entity class instance back to Dataverse-compatible object
+   * @param entityInstance - The strongly typed entity class instance
+   * @returns Dataverse-compatible object
+   */
+  static mapToDataverseFormat<T>(entityInstance: T): any {
+    const entityName = (entityInstance as any).constructor.name;
+    const config = ENTITY_CONFIGS[entityName];
+    
+    if (!config) {
+      throw new Error(`Entity configuration not found for: ${entityName}. Please add it to ENTITY_CONFIGS.`);
+    }
+
+    const plain = instanceToPlain(entityInstance);
+    const result: any = { ...plain };
+    
+    // Map the id field back to the primary key field
+    if (plain.id) {
+      result[config.primaryIdField] = plain.id;
+      delete result.id; // Remove the generic id field
+    }
+    
+    return result;
   }
 }

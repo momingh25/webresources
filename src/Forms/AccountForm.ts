@@ -2,6 +2,8 @@
 import { DataverseHelpers } from "../helpers/DataverseHelpers";
 import { TeamHelpers } from "../helpers/TeamHelpers";
 import { accountRepository } from "../repositories";
+import { EntityMapper } from "../mappings/AutoMapperConfig";
+import { Account } from "../repositories/entities/Account";
 
 export class AccountForm {
   static async onLoad(context: Xrm.Events.EventContext): Promise<void> {
@@ -15,6 +17,7 @@ export class AccountForm {
 
   /**
    * Retrieves an account by ID and logs it to console
+   * Demonstrates both generic mapping methods: mapToEntity and mapFromEntity
    * @param formContext - FormContext to get current record ID
    */
   static async retrieveAccountById(formContext: Xrm.FormContext): Promise<void> {
@@ -29,7 +32,7 @@ export class AccountForm {
       const account = await accountRepository.retrieveById(idToRetrieve, ['name', 'accountnumber', 'telephone1', 'fax', 'createdon']);
       
       if (account) {
-        console.log('Account retrieved by ID (retrieveById method):', account);
+        console.log('✅ Account retrieved by ID (uses mapToEntity internally):', account);
         console.log('Account details from retrieveById:');
         console.log('- ID:', account.id);
         console.log('- Name:', account.name);
@@ -38,11 +41,37 @@ export class AccountForm {
         console.log('- Fax:', account.fax);
         console.log('- Created On:', account.createdon);
         console.log('- Entity Type:', account.entityLogicalName);
+
+        console.log('\n🔄 --- Demonstrating Generic Mapping Methods ---');
+        
+        // 🎯 DEMONSTRATION 1: mapToDataverseFormat (Entity class → Dataverse format)
+        console.log('🔹 Testing mapToDataverseFormat (Account class → Dataverse format):');
+        const dataverseFormat = EntityMapper.mapToDataverseFormat(account);
+        console.log('✅ mapToDataverseFormat result:', dataverseFormat);
+        console.log('- Notice: id became accountid:', dataverseFormat.accountid);
+        console.log('- Name preserved:', dataverseFormat.name);
+        console.log('- Phone preserved:', dataverseFormat.telephone1);
+        
+        // 🎯 DEMONSTRATION 2: mapToEntityClass (Dataverse format → Entity class)
+        console.log('\n🔹 Testing mapToEntityClass (Dataverse format → Account class):');
+        const backToEntity = EntityMapper.mapToEntityClass(Account, dataverseFormat);
+        console.log('✅ mapToEntityClass result:', backToEntity);
+        console.log('- Notice: accountid became id:', backToEntity.id);
+        console.log('- Name preserved:', backToEntity.name);
+        console.log('- Entity type added:', backToEntity.entityLogicalName);
+        
+        // 🎯 VERIFICATION: Round-trip test
+        console.log('\n🔍 --- Round-trip Verification ---');
+        console.log('Original account ID:', account.id);
+        console.log('After mapToDataverseFormat → mapToEntityClass ID:', backToEntity.id);
+        console.log('Round-trip successful:', account.id === backToEntity.id ? '✅' : '❌');
+        console.log('Names match:', account.name === backToEntity.name ? '✅' : '❌');
+        
       } else {
-        console.log(`Account with ID ${idToRetrieve} not found`);
+        console.log(`❌ Account with ID ${idToRetrieve} not found`);
       }
     } catch (error) {
-      console.error('Error retrieving account by ID:', error);
+      console.error('❌ Error retrieving account by ID:', error);
     }
   }
 

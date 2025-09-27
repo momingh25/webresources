@@ -8,13 +8,13 @@ export class TeamRepository extends BaseRepository<Team> {
   }
 
   protected mapFromDataverse(entity: any): Team {
-    // Use EntityMapper with class-transformer for automatic mapping
-    return EntityMapper.mapToTeam(entity);
+    // Use the new clear method name: Dataverse data → Entity class
+    return EntityMapper.mapToEntityClass(Team, entity);
   }
 
   protected mapToDataverse(entity: Partial<Team>): any {
-    // Use EntityMapper for reverse mapping
-    const mapped = EntityMapper.mapFromTeam(entity as Team);
+    // Use the new clear method name: Entity class → Dataverse format
+    const mapped = EntityMapper.mapToDataverseFormat(entity as Team);
     
     // Filter out undefined values and return only the fields we want to update
     const dataverseEntity: any = {};

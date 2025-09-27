@@ -8,13 +8,13 @@ export class AccountRepository extends BaseRepository<Account> {
   }
 
   protected mapFromDataverse(entity: any): Account {
-    // Use EntityMapper with class-transformer for automatic mapping
-    return EntityMapper.mapToAccount(entity);
+    // Use the new clear method name: Dataverse data → Entity class
+    return EntityMapper.mapToEntityClass(Account, entity);
   }
 
   protected mapToDataverse(entity: Partial<Account>): any {
-    // Use EntityMapper for reverse mapping
-    const mapped = EntityMapper.mapFromAccount(entity as Account);
+    // Use the new clear method name: Entity class → Dataverse format
+    const mapped = EntityMapper.mapToDataverseFormat(entity as Account);
     
     // Filter out undefined values and return only the fields we want to update
     const dataverseEntity: any = {};
