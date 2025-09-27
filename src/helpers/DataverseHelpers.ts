@@ -13,50 +13,23 @@ export class DataverseHelpers {
     return Xrm.Utility.getGlobalContext().organizationSettings;
   }
 
-  // Execute Web API request
-  static async executeWebApiRequest<T>(
-    entitySetName: string,
-    query?: string
-  ): Promise<T[]> {
-    const clientUrl = Xrm.Utility.getGlobalContext().getClientUrl();
-    const apiVersion = "9.2";
-    
-    let url = `${clientUrl}/api/data/v${apiVersion}/${entitySetName}`;
-    if (query) {
-      url += `?${query}`;
-    }
-
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "OData-MaxVersion": "4.0",
-        "OData-Version": "4.0"
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.value;
-  }
-
-  // Show notification
+  // Show notification - requires form context
   static showNotification(
+    formContext: Xrm.FormContext,
     message: string, 
     type: Xrm.FormNotificationLevel = "INFO",
     uniqueId?: string
   ): void {
-    Xrm.Page.ui.setFormNotification(message, type, uniqueId);
+    formContext.ui.setFormNotification(message, type, uniqueId);
   }
 
-  // Clear notification
-  static clearNotification(uniqueId?: string): void {
+  // Clear notification - requires form context
+  static clearNotification(
+    formContext: Xrm.FormContext,
+    uniqueId?: string
+  ): void {
     if (uniqueId) {
-      Xrm.Page.ui.clearFormNotification(uniqueId);
+      formContext.ui.clearFormNotification(uniqueId);
     }
   }
 
