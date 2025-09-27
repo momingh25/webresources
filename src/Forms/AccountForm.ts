@@ -28,8 +28,14 @@ export class AccountForm {
       
       console.log(`\n--- Retrieving account by ID: ${idToRetrieve} ---`);
       
-      // Retrieve account by ID with specific columns
-      const account = await accountRepository.retrieveById(idToRetrieve, ['name', 'accountnumber', 'telephone1', 'fax', 'createdon']);
+      // Retrieve account by ID with all Account class fields
+      const account = await accountRepository.retrieveById(idToRetrieve, [
+        'name', 'accountnumber', 'telephone1', 'fax', 'createdon',
+        'address1_line1', 'address1_city', 'address1_stateorprovince', 
+        'address1_postalcode', 'address1_country', 'websiteurl', 
+        'numberofemployees', 'creditonhold', 'industrycode', 
+        'ownershipcode', '_parentaccountid_value'
+      ]);
       
       if (account) {
         console.log('✅ Account retrieved by ID (uses mapToEntity internally):', account);
@@ -40,6 +46,20 @@ export class AccountForm {
         console.log('- Phone:', account.telephone1);
         console.log('- Fax:', account.fax);
         console.log('- Created On:', account.createdon);
+        console.log('- Address Line 1:', account.address1_line1);
+        console.log('- City:', account.address1_city);
+        console.log('- State/Province:', account.address1_stateorprovince);
+        console.log('- Postal Code:', account.address1_postalcode);
+        console.log('- Country:', account.address1_country);
+        console.log('- Website:', account.websiteurl);
+        console.log('- Number of Employees:', account.numberofemployees);
+        console.log('- Credit On Hold:', account.creditonhold);
+        console.log('- Industry Code:', account.industrycode);
+        console.log('- Ownership Code:', account.ownershipcode);
+        console.log('- Parent Account ID:', account.parentaccountid);
+        console.log('- Parent Account ID (detailed):', account.parentaccountid ? 
+          `{ id: "${account.parentaccountid.id}", name: "${account.parentaccountid.name}" }` : 
+          'Not set or null');
         console.log('- Entity Type:', account.entityLogicalName);
 
         console.log('\n🔄 --- Demonstrating Generic Mapping Methods ---');

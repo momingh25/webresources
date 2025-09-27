@@ -14,6 +14,28 @@ export class Account implements IEntity {
   accountnumber?: string;
   telephone1?: string;
   fax?: string;
+  address1_line1?: string;
+  address1_city?: string;
+  address1_stateorprovince?: string;
+  address1_postalcode?: string;
+  address1_country?: string;
+  websiteurl?: string;
+  numberofemployees?: number;
+  creditonhold?: boolean;
+  industrycode?: number
+  ownershipcode?: number;
+  
+  @Transform(({ obj }) => {
+    // Handle lookup field transformation from Dataverse format
+    if (obj._parentaccountid_value) {
+      return {
+        id: obj._parentaccountid_value,
+        name: obj['_parentaccountid_value@OData.Community.Display.V1.FormattedValue'] || undefined
+      };
+    }
+    return obj.parentaccountid || undefined;
+  })
+  parentaccountid?: { id: string; name?: string };
 
   constructor(id: string, name: string) {
     this.id = id;
