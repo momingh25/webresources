@@ -13,6 +13,7 @@ export class AccountForm {
       await AccountForm.checkNameFieldAccess(context);
 
       await AccountForm.retrieveAccountById(formContext);
+      await AccountForm.retrieveAccountByIdWithFetchXml(formContext);
   }
 
   /**
@@ -84,6 +85,64 @@ export class AccountForm {
       }
     } catch (error) {
       console.error('❌ Error retrieving account by ID:', error);
+    }
+  }
+
+  /**
+   * Retrieves an account by ID using FetchXML and logs it to console
+   * Demonstrates the new FetchXML-based retrieveById method
+   * @param formContext - FormContext to get current record ID
+   */
+  static async retrieveAccountByIdWithFetchXml(formContext: Xrm.FormContext): Promise<void> {
+    try {
+      // Get current record ID from FormContext
+      const currentRecord = formContext.data.entity;
+      const idToRetrieve = currentRecord.getId().replace(/[{}]/g, '');
+      
+      console.log(`\n--- Retrieving account by ID using FetchXML: ${idToRetrieve} ---`);
+      
+      // Retrieve account by ID with FetchXML using all Account class fields
+      const account = await accountRepository.retrieveByIdWithFetchXml(idToRetrieve, [
+        'name', 'accountnumber', 'telephone1', 'fax', 'createdon',
+        'address1_line1', 'address1_city', 'address1_stateorprovince', 
+        'address1_postalcode', 'address1_country', 'websiteurl', 
+        'numberofemployees', 'creditonhold', 'industrycode', 
+        'ownershipcode', 'parentaccountid'  // Use FetchXML field name, not _parentaccountid_value
+      ]);
+      
+      if (account) {
+        console.log('✅ Account retrieved by ID with FetchXML (uses mapToEntityClass internally):', account);
+        console.log('FetchXML Account details:');
+        console.log('- ID:', account.id);
+        console.log('- Name:', account.name);
+        console.log('- Account Number:', account.accountnumber);
+        console.log('- Phone:', account.telephone1);
+        console.log('- Fax:', account.fax);
+        console.log('- Created On:', account.createdon);
+        console.log('- Address Line 1:', account.address1_line1);
+        console.log('- City:', account.address1_city);
+        console.log('- State/Province:', account.address1_stateorprovince);
+        console.log('- Postal Code:', account.address1_postalcode);
+        console.log('- Country:', account.address1_country);
+        console.log('- Website:', account.websiteurl);
+        console.log('- Number of Employees:', account.numberofemployees);
+        console.log('- Credit On Hold:', account.creditonhold);
+        console.log('- Industry Code:', account.industrycode);
+        console.log('- Ownership Code:', account.ownershipcode);
+        console.log('- Parent Account ID:', account.parentaccountid);
+        console.log('- Parent Account ID (detailed):', account.parentaccountid ? 
+          `{ id: "${account.parentaccountid.id}", name: "${account.parentaccountid.name}" }` : 
+          'Not set or null');
+        console.log('- Entity Type:', account.entityLogicalName);
+        
+        console.log('\n🎯 FetchXML vs Web API Comparison:');
+        console.log('Both methods should return identical Account objects with the same mapping.');
+        
+      } else {
+        console.log(`❌ Account with ID ${idToRetrieve} not found using FetchXML`);
+      }
+    } catch (error) {
+      console.error('❌ Error retrieving account by ID with FetchXML:', error);
     }
   }
 

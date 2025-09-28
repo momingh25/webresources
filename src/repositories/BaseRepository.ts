@@ -59,6 +59,55 @@ export abstract class BaseRepository<T extends IEntity> implements IRepository<T
     }
   }
 
+  /**
+   * Retrieve a single entity by ID using FetchXML
+   * @param id - Entity ID (with or without curly braces)
+   * @param columnSet - Array of column names to retrieve
+   * @returns Promise with typed entity or null if not found
+   */
+  async retrieveByIdWithFetchXml(id: string, columnSet?: string[]): Promise<T | null> {
+    try {
+      const cleanId = this.cleanEntityId(id);
+      
+      // Build column attributes for FetchXML
+      const attributes = columnSet && columnSet.length > 0 
+        ? columnSet.map(col => `<attribute name="${col}" />`).join('\n            ')
+        : '<all-attributes />';
+      
+      // Build FetchXML query
+      const fetchXml = `
+        <fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">
+          <entity name="${this.entityLogicalName}">
+            ${attributes}
+            <filter type="and">
+              <condition attribute="${this.getPrimaryIdField()}" operator="eq" value="${cleanId}" />
+            </filter>
+          </entity>
+        </fetch>`;
+      
+      console.log(`🔍 FetchXML query for ${this.entityLogicalName}:`, fetchXml);
+      
+      // Execute FetchXML query
+      const result = await this.fetchXml(fetchXml);
+      
+      // Return the first entity or null if not found
+      return result.entities.length > 0 ? result.entities[0] : null;
+    } catch (error) {
+      console.error(`Error retrieving ${this.entityLogicalName} by ID with FetchXML:`, error);
+      throw new Error(`Failed to retrieve entity with FetchXML: ${error}`);
+    }
+  }
+
+  /**
+   * Get the primary ID field name for this entity
+   * Override in derived classes if needed
+   * @returns Primary ID field name
+   */
+  protected getPrimaryIdField(): string {
+    // Default convention: entityLogicalName + 'id'
+    return `${this.entityLogicalName}id`;
+  }
+
   protected cleanEntityId(id: string): string {
     return id.replace(/[{}]/g, '');
   }
