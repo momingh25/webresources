@@ -99,31 +99,6 @@ export class EntityMapper {
   }
 
   /**
-   * Maps entity class instance back to Dataverse-compatible object
-   * @param entityInstance - The strongly typed entity class instance
-   * @returns Dataverse-compatible object
-   */
-  static mapToDataverseFormat<T>(entityInstance: T): any {
-    const entityName = (entityInstance as any).constructor.name;
-    const config = ENTITY_CONFIGS[entityName];
-    
-    if (!config) {
-      throw new Error(`Entity configuration not found for: ${entityName}. Please add it to ENTITY_CONFIGS.`);
-    }
-
-    const plain = instanceToPlain(entityInstance);
-    const result: any = { ...plain };
-    
-    // Map the id field back to the primary key field
-    if (plain.id) {
-      result[config.primaryIdField] = plain.id;
-      delete result.id; // Remove the generic id field
-    }
-    
-    return result;
-  }
-
-  /**
    * Removes OData metadata properties from Dataverse response
    * @param data - Raw data from Dataverse API
    * @returns Clean data without OData properties

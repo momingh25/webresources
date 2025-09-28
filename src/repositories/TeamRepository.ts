@@ -12,17 +12,6 @@ export class TeamRepository extends BaseRepository<Team> {
     return EntityMapper.mapToEntityClass(Team, entity);
   }
 
-  protected mapToDataverse(entity: Partial<Team>): any {
-    // Use the new clear method name: Entity class → Dataverse format
-    const mapped = EntityMapper.mapToDataverseFormat(entity as Team);
-    
-    // Filter out undefined values and return only the fields we want to update
-    const dataverseEntity: any = {};
-    if (mapped.name !== undefined) dataverseEntity.name = mapped.name;
-    
-    return dataverseEntity;
-  }
-
   async findByName(teamName: string): Promise<Team | null> {
     try {
       const fetchXml = `

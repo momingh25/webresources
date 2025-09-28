@@ -71,14 +71,6 @@ export abstract class BaseRepository<T extends IEntity> implements IRepository<T
    */
   protected abstract mapFromDataverse(entity: any): T;
 
-  /**
-   * Map strongly-typed entity to Dataverse-compatible object
-   * Override in derived classes for entity-specific mapping
-   * @param entity - Strongly-typed entity
-   * @returns Dataverse-compatible object
-   */
-  protected abstract mapToDataverse(entity: Partial<T>): any;
-
   protected parseDate(dateString?: string): Date | undefined {
     if (!dateString) return undefined;
     const date = new Date(dateString);

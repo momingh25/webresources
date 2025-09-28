@@ -62,30 +62,22 @@ export class AccountForm {
           'Not set or null');
         console.log('- Entity Type:', account.entityLogicalName);
 
-        console.log('\n🔄 --- Demonstrating Generic Mapping Methods ---');
+        console.log('\n🔄 --- Demonstrating mapToEntityClass Method ---');
         
-        // 🎯 DEMONSTRATION 1: mapToDataverseFormat (Entity class → Dataverse format)
-        console.log('🔹 Testing mapToDataverseFormat (Account class → Dataverse format):');
-        const dataverseFormat = EntityMapper.mapToDataverseFormat(account);
-        console.log('✅ mapToDataverseFormat result:', dataverseFormat);
-        console.log('- Notice: id became accountid:', dataverseFormat.accountid);
-        console.log('- Name preserved:', dataverseFormat.name);
-        console.log('- Phone preserved:', dataverseFormat.telephone1);
+        // 🎯 DEMONSTRATION: Creating a simple Dataverse-like object for testing
+        console.log('🔹 Testing mapToEntityClass with mock Dataverse data:');
+        const mockDataverseData = {
+          accountid: account.id,
+          name: account.name,
+          telephone1: account.telephone1,
+          entityLogicalName: 'account'
+        };
         
-        // 🎯 DEMONSTRATION 2: mapToEntityClass (Dataverse format → Entity class)
-        console.log('\n🔹 Testing mapToEntityClass (Dataverse format → Account class):');
-        const backToEntity = EntityMapper.mapToEntityClass(Account, dataverseFormat);
-        console.log('✅ mapToEntityClass result:', backToEntity);
-        console.log('- Notice: accountid became id:', backToEntity.id);
-        console.log('- Name preserved:', backToEntity.name);
-        console.log('- Entity type added:', backToEntity.entityLogicalName);
-        
-        // 🎯 VERIFICATION: Round-trip test
-        console.log('\n🔍 --- Round-trip Verification ---');
-        console.log('Original account ID:', account.id);
-        console.log('After mapToDataverseFormat → mapToEntityClass ID:', backToEntity.id);
-        console.log('Round-trip successful:', account.id === backToEntity.id ? '✅' : '❌');
-        console.log('Names match:', account.name === backToEntity.name ? '✅' : '❌');
+        const mappedEntity = EntityMapper.mapToEntityClass(Account, mockDataverseData);
+        console.log('✅ mapToEntityClass result:', mappedEntity);
+        console.log('- Notice: accountid became id:', mappedEntity.id);
+        console.log('- Name preserved:', mappedEntity.name);
+        console.log('- Entity type added:', mappedEntity.entityLogicalName);
         
       } else {
         console.log(`❌ Account with ID ${idToRetrieve} not found`);

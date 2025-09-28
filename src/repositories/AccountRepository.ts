@@ -12,20 +12,6 @@ export class AccountRepository extends BaseRepository<Account> {
     return EntityMapper.mapToEntityClass(Account, entity);
   }
 
-  protected mapToDataverse(entity: Partial<Account>): any {
-    // Use the new clear method name: Entity class → Dataverse format
-    const mapped = EntityMapper.mapToDataverseFormat(entity as Account);
-    
-    // Filter out undefined values and return only the fields we want to update
-    const dataverseEntity: any = {};
-    if (mapped.name !== undefined) dataverseEntity.name = mapped.name;
-    if (mapped.accountnumber !== undefined) dataverseEntity.accountnumber = mapped.accountnumber;
-    if (mapped.telephone1 !== undefined) dataverseEntity.telephone1 = mapped.telephone1;
-    if (mapped.fax !== undefined) dataverseEntity.fax = mapped.fax;
-    
-    return dataverseEntity;
-  }
-
   async findByName(name: string, exactMatch: boolean = false): Promise<Account[]> {
     try {
       const operator = exactMatch ? 'eq' : 'like';
