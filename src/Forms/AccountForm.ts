@@ -2,8 +2,6 @@
 import { DataverseHelpers } from "../helpers/DataverseHelpers";
 import { TeamHelpers } from "../helpers/TeamHelpers";
 import { accountRepository, teamRepository } from "../repositories";
-import { EntityMapper } from "../mappings/AutoMapperConfig";
-import { Account } from "../repositories/entities/Account";
 
 export class AccountForm {
   static async onLoad(context: Xrm.Events.EventContext): Promise<void> {
@@ -13,7 +11,6 @@ export class AccountForm {
       await AccountForm.checkNameFieldAccess(context);
 
       await AccountForm.retrieveAccountById(formContext);
-      await AccountForm.retrieveTeamByName(formContext);
   }
 
   /**
@@ -38,34 +35,6 @@ export class AccountForm {
       console.log('🏢 Retrieved Account via FetchXML:', account);
     } catch (error) {
       console.error('❌ Error retrieving account by ID with FetchXML:', error);
-    }
-  }
-
-  /**
-   * Retrieves a team by name and logs it to console
-   * Demonstrates team retrieval using FetchXML
-   * @param formContext - FormContext (not used but kept for consistency)
-   */
-  static async retrieveTeamByName(formContext: Xrm.FormContext): Promise<void> {
-    try {
-      // Retrieve team by name
-      const team = await teamRepository.findByName('Client Services');
-      
-      if (team) {
-        // Demonstrate additional team functionality
-        const currentUser = DataverseHelpers.getCurrentUser();
-        
-        // Test user membership in this specific team
-        const isMember = await teamRepository.isUserMemberOfTeam('Client Services', currentUser.userId);
-        
-        // Test getting all teams for current user
-        const userTeams = await teamRepository.getTeamsForUser(currentUser.userId);
-        
-      } else {
-        // Team not found - could show notification if needed
-      }
-    } catch (error) {
-      // Error already logged by repository layer if needed
     }
   }
 
