@@ -9,8 +9,11 @@ export class Team implements IEntity {
   
   @Transform(({ value }) => value ? new Date(value) : undefined)
   createdon?: Date;
-
+  @Transform(({ value }) => value ? new Date(value) : undefined)
+  modifiedon?: Date;
   name: string;
+  createdby?: { id: string; name?: string };
+
 
   constructor(id: string, name: string) {
     this.id = id;

@@ -20,6 +20,8 @@ export class TeamRepository extends BaseRepository<Team> {
             <attribute name="teamid" />
             <attribute name="name" />
             <attribute name="createdon" />
+            <attribute name="createdby" />
+            <attribute name="modifiedon" />
             <filter type="and">
               <condition attribute="name" operator="eq" value="${teamName.replace(/'/g, "&apos;")}" />
             </filter>

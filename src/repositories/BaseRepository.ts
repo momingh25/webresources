@@ -1,4 +1,4 @@
-import { IEntity, IRepository, IQueryOptions, IFetchXmlResult } from './interfaces/IEntity';
+import { IEntity, IRepository, IFetchXmlResult } from './interfaces/IEntity';
 
 /**
  * Base repository class that provides common CRUD operations and FetchXML execution
@@ -16,10 +16,9 @@ export abstract class BaseRepository<T extends IEntity> implements IRepository<T
   /**
    * Execute FetchXML query and return strongly-typed entities
    * @param fetchXml - FetchXML query string
-   * @param options - Query options
    * @returns Promise with typed entities
    */
-  async fetchXml(fetchXml: string, options?: IQueryOptions): Promise<IFetchXmlResult<T>> {
+  async fetchXml(fetchXml: string): Promise<IFetchXmlResult<T>> {
     try {
       // Use Xrm.WebApi.retrieveMultipleRecords with fetchXml
       const query = `?fetchXml=${encodeURIComponent(fetchXml)}`;
@@ -34,67 +33,6 @@ export abstract class BaseRepository<T extends IEntity> implements IRepository<T
     } catch (error) {
       console.error(`Error executing FetchXML for ${this.entityLogicalName}:`, error);
       throw new Error(`Failed to execute FetchXML query: ${error}`);
-    }
-  }
-
-  /**
-   * Retrieve a single entity by ID
-   * @param id - Entity ID (with or without curly braces)
-   * @param columnSet - Array of column names to retrieve
-   * @returns Promise with typed entity or null if not found
-   */
-  async retrieveById(id: string, columnSet?: string[]): Promise<T | null> {
-    try {
-      const cleanId = this.cleanEntityId(id);
-      const query = columnSet ? `?$select=${columnSet.join(',')}` : '';
-      
-      const entity = await Xrm.WebApi.retrieveRecord(this.entityLogicalName, cleanId, query);
-      return this.mapFromDataverse(entity);
-    } catch (error) {
-      if (error.errorCode === 404) {
-        return null;
-      }
-      console.error(`Error retrieving ${this.entityLogicalName} by ID:`, error);
-      throw new Error(`Failed to retrieve entity: ${error}`);
-    }
-  }
-
-  /**
-   * Retrieve a single entity by ID using FetchXML
-   * @param id - Entity ID (with or without curly braces)
-   * @param columnSet - Array of column names to retrieve
-   * @returns Promise with typed entity or null if not found
-   */
-  async retrieveByIdWithFetchXml(id: string, columnSet?: string[]): Promise<T | null> {
-    try {
-      const cleanId = this.cleanEntityId(id);
-      
-      // Build column attributes for FetchXML
-      const attributes = columnSet && columnSet.length > 0 
-        ? columnSet.map(col => `<attribute name="${col}" />`).join('\n            ')
-        : '<all-attributes />';
-      
-      // Build FetchXML query
-      const fetchXml = `
-        <fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">
-          <entity name="${this.entityLogicalName}">
-            ${attributes}
-            <filter type="and">
-              <condition attribute="${this.getPrimaryIdField()}" operator="eq" value="${cleanId}" />
-            </filter>
-          </entity>
-        </fetch>`;
-      
-      console.log(`🔍 FetchXML query for ${this.entityLogicalName}:`, fetchXml);
-      
-      // Execute FetchXML query
-      const result = await this.fetchXml(fetchXml);
-      
-      // Return the first entity or null if not found
-      return result.entities.length > 0 ? result.entities[0] : null;
-    } catch (error) {
-      console.error(`Error retrieving ${this.entityLogicalName} by ID with FetchXML:`, error);
-      throw new Error(`Failed to retrieve entity with FetchXML: ${error}`);
     }
   }
 

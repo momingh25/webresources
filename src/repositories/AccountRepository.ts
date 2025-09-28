@@ -12,52 +12,40 @@ export class AccountRepository extends BaseRepository<Account> {
     return EntityMapper.mapToEntityClass(Account, entity);
   }
 
-  async findByName(name: string, exactMatch: boolean = false): Promise<Account[]> {
+  /**
+   * Retrieve a single account by ID
+   * @param id - Account ID (with or without curly braces)
+   * @param columnSet - Array of column names to retrieve
+   * @returns Promise with Account entity or null if not found
+   */
+  async getById(id: string, columnSet?: string[]): Promise<Account | null> {
     try {
-      const operator = exactMatch ? 'eq' : 'like';
-      const value = exactMatch ? name.replace(/'/g, "&apos;") : `%${name.replace(/'/g, "&apos;")}%`;
+      const cleanId = id.replace(/[{}]/g, '');
       
+      // Build column attributes for FetchXML - Account specific
+      const attributes = columnSet && columnSet.length > 0 
+        ? columnSet.map(col => `<attribute name="${col}" />`).join('\n            ')
+        : '<all-attributes />';
+      
+      // Build FetchXML query specifically for Account entity
       const fetchXml = `
-        <fetch version="1.0">
+        <fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">
           <entity name="account">
-            <attribute name="accountid" />
-            <attribute name="name" />
-            <attribute name="accountnumber" />
-            <attribute name="createdon" />
+            ${attributes}
             <filter type="and">
-              <condition attribute="name" operator="${operator}" value="${value}" />
+              <condition attribute="accountid" operator="eq" value="${cleanId}" />
             </filter>
           </entity>
         </fetch>`;
-
+      
+      // Execute FetchXML query using base class method
       const result = await this.fetchXml(fetchXml);
-      return result.entities;
-    } catch (error) {
-      console.error('Error finding accounts by name:', error);
-      throw error;
-    }
-  }
-
-  async findByAccountNumber(accountNumber: string): Promise<Account | null> {
-    try {
-      const fetchXml = `
-        <fetch version="1.0">
-          <entity name="account">
-            <attribute name="accountid" />
-            <attribute name="name" />
-            <attribute name="accountnumber" />
-            <attribute name="createdon" />
-            <filter type="and">
-              <condition attribute="accountnumber" operator="eq" value="${accountNumber.replace(/'/g, "&apos;")}" />
-            </filter>
-          </entity>
-        </fetch>`;
-
-      const result = await this.fetchXml(fetchXml);
+      
+      // Return the first account or null if not found
       return result.entities.length > 0 ? result.entities[0] : null;
     } catch (error) {
-      console.error('Error finding account by account number:', error);
-      throw error;
+      console.error(`Error retrieving Account by ID with FetchXML:`, error);
+      throw new Error(`Failed to retrieve Account with FetchXML: ${error}`);
     }
   }
 }
