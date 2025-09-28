@@ -61,6 +61,11 @@ export class AccountForm {
           "INFO", 
           "readonly-warning"
         );
+
+        // Auto-clear the notification after 10 seconds
+        setTimeout(() => {
+          DataverseHelpers.clearNotification(formContext, "readonly-warning");
+        }, 10000);
       }
     } catch (error) {
       DataverseHelpers.showNotification(
@@ -69,6 +74,11 @@ export class AccountForm {
         "ERROR", 
         "access-error"
       );
+
+      // Auto-clear the error notification after 10 seconds
+      setTimeout(() => {
+        DataverseHelpers.clearNotification(formContext, "access-error");
+      }, 10000);
     }
   }
 }
